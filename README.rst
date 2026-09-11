@@ -18,7 +18,6 @@ The script works in a mamba environment generated with the following command. Mo
 
 Example
 ===========
-::
+Run the script with the command ::
    python E3DonMapShaded.py
-
    
