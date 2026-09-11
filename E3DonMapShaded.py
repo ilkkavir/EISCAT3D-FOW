@@ -14,7 +14,7 @@ import mpl_toolkits.mplot3d.art3d as art3d
 def generate_3d_discrete_plates_faded(filename="eiscat3d_plates_faded"):
 
     # select font size. Larger fonts may require adjustments to site name label positions
-    fontsize = 12
+    fontsize = 14
     
     # 1. Precise Site Locations (WGS84 Lon, Lat)
     sites = {
@@ -137,7 +137,7 @@ def generate_3d_discrete_plates_faded(filename="eiscat3d_plates_faded"):
                 if len(verts) > 3:
                     
                     # Label placement near the boundary edge
-                    ax.text(verts[0, 0] + 12, verts[0, 1] + 12, z + 2, f"{int(z)} km", 
+                    ax.text(verts[0, 0] + 12, verts[0, 1] - 150, z + 2, f"{int(z)} km", 
                             fontsize=fontsize, fontweight='bold', color='#1e40af')
  
     # 6. Safe Coastline Reprojection Layer (Z = 0 floor plate)
@@ -283,7 +283,7 @@ def generate_3d_discrete_plates_faded(filename="eiscat3d_plates_faded"):
     for name, (x, y) in site_coords.items():
         ax.scatter(x, y, 0, color='yellow', edgecolor='black', s=90, linewidth=1.5, zorder=9)
         if name == "Kaiseniemi (Rx)":
-            ax.text(x - 80, y - 300, 2, name, fontsize=fontsize, fontweight='bold', zorder=10)
+            ax.text(x - 80, y - 340, 2, name, fontsize=fontsize, fontweight='bold', zorder=10)
         else:
             ax.text(x + 20, y + 10, 2, name, fontsize=fontsize, fontweight='bold', zorder=10)
         
