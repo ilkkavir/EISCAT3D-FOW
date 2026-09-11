@@ -8,7 +8,7 @@ The script was developed with google gemini AI with some manual polishing afterw
 Prerequisites
 =======
 
-The script works in a mamba environment generated with the following command. Module version information may (or may not) follow later...::
+The script works in a mamba environment generated with the following command. Module version information may (or may not) follow later... ::
 
   mamba create -n e3d_figure -c conda-forge python=3.11 matplotlib cartopy numpy shapely -y
   mamba activate e3d_figure
@@ -17,7 +17,7 @@ The script works in a mamba environment generated with the following command. Mo
 Example
 ===========
 
-Run the script with the command::
+Run the script with the command ::
 
   python E3DonMapShaded.py
    
