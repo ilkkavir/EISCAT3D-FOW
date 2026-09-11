@@ -15,6 +15,10 @@ def generate_3d_discrete_plates_faded(filename="eiscat3d_plates_faded"):
 
     # select font size. Larger fonts may require adjustments to site name label positions
     fontsize = 14
+
+    # optional streamlines
+    vortex = False
+    convection = False
     
     # 1. Precise Site Locations (WGS84 Lon, Lat)
     sites = {
@@ -139,7 +143,99 @@ def generate_3d_discrete_plates_faded(filename="eiscat3d_plates_faded"):
                     # Label placement near the boundary edge
                     ax.text(verts[0, 0] + 12, verts[0, 1] - 150, z + 2, f"{int(z)} km", 
                             fontsize=fontsize, fontweight='bold', color='#1e40af')
- 
+
+            # add streamlines of a vortex
+            if vortex:
+                from matplotlib.collections import LineCollection
+
+                filename+='_vortex'
+                
+                # 1. Define a sample horizontal plasma flow velocity field over your grid
+                # (A simple vortex pattern mimicking ionospheric convection)
+                vortex_x, vortex_y = skibotn_x + 100, skibotn_y + 100
+                U_plasma = -(Y_2d - vortex_y) / 100.0
+                V_plasma =  (X_2d - vortex_x) / 100.0
+                
+                # Mask the velocity field so streamlines only show inside the valid blue region
+                U_plasma[~valid_mask] = np.nan
+                V_plasma[~valid_mask] = np.nan
+                
+                # 2. Generate flat 2D streamlines via a temporary background canvas
+                fig_temp = plt.figure()
+                ax_temp = fig_temp.add_subplot(111)
+                strm = ax_temp.streamplot(x_space, y_space, U_plasma, V_plasma, 
+                                          density=.8, color='#0f172a', linewidth=1.0)
+                
+                # 3. Extract the line segments and project them into the 3D space matrix
+                segments = strm.lines.get_segments()
+                if len(segments) > 0:
+                    lc = LineCollection(segments, colors='#0f172a', linewidths=1.2, alpha=0.7)
+                    ax.add_collection(lc)
+                    # Physically lift the collection to the exact plate altitude 'z'
+                    art3d.line_collection_2d_to_3d(lc, zs=z, zdir="z")
+                    
+                    plt.close(fig_temp) # Clean up temporary canvas
+
+            # add streamlines of "convection cells"
+            if convection:
+                from matplotlib.collections import LineCollection
+
+                filename+='_convection'
+                
+                # 1. Define a realistic twin-vortex ionospheric convection pattern
+                # Base background plasma flow shifting across the field of view (km/s scaling)
+                U_base = 0.5 * np.ones_like(X_2d)
+                V_base = 0.2 * np.sin(X_2d / 150.0)  # Gentle wave variation across space
+                
+                # Center coordinates for the Dusk cell (Vortex 1) and Dawn cell (Vortex 2)
+                dusk_x, dusk_y = skibotn_x - 120.0, skibotn_y + 80.0
+                dawn_x, dawn_y = skibotn_x + 180.0, skibotn_y - 100.0
+                
+                # Distance arrays from centers
+                r_dusk = np.sqrt((X_2d - dusk_x)**2 + (Y_2d - dusk_y)**2) + 1.0
+                r_dawn = np.sqrt((X_2d - dawn_x)**2 + (Y_2d - dawn_y)**2) + 1.0
+                
+                # Generate localized spatial rotation and inflow/outflow falloff (Gaussian decay)
+                scale_r = 250.0 # Size of the convection cells in km
+                decay_dusk = np.exp(-(r_dusk / scale_r)**2)
+                decay_dawn = np.exp(-(r_dawn / scale_r)**2)
+                
+                # Dusk counter-clockwise cell components
+                U_dusk = -((Y_2d - dusk_y) / r_dusk) * decay_dusk * 1.5
+                V_dusk =  ((X_2d - dusk_x) / r_dusk) * decay_dusk * 1.5
+                
+                # Dawn clockwise cell components
+                U_dawn =  ((Y_2d - dawn_y) / r_dawn) * decay_dawn * 1.2
+                V_dawn = -((X_2d - dawn_x) / r_dawn) * decay_dawn * 1.2
+                
+                # Superimpose the fields to create a complex pattern with spatial variations
+                U_plasma = U_base + U_dusk + U_dawn
+                V_plasma = V_base + V_dusk + V_dawn
+                
+                # Mask the velocity field so streamlines only show inside the valid blue region
+                U_plasma[~valid_mask] = np.nan
+                V_plasma[~valid_mask] = np.nan
+                
+                # 2. Generate flat 2D streamlines via a temporary background canvas
+                fig_temp = plt.figure()
+                ax_temp = fig_temp.add_subplot(111)
+                
+                # Adjust density to control line spacing; color can be changed to pop against the blue
+                strm = ax_temp.streamplot(x_space, y_space, U_plasma, V_plasma, 
+                                          density=1., color='#0f172a', linewidth=1.0)
+                
+                # 3. Extract the line segments and project them into the 3D space matrix
+                segments = strm.lines.get_segments()
+                if len(segments) > 0:
+                    # Use alpha to let underlying radar beam intersections remain visible
+                    lc = LineCollection(segments, colors='#1e293b', linewidths=1.1, alpha=0.6)
+                    ax.add_collection(lc)
+                    # Physically lift the collection to the exact plate altitude 'z'
+                    art3d.line_collection_2d_to_3d(lc, zs=z, zdir="z")
+                    
+                    plt.close(fig_temp) # Clean up temporary canvas
+
+                    
     # 6. Safe Coastline Reprojection Layer (Z = 0 floor plate)
     coastline_feature = cfeature.COASTLINE.with_scale('10m')
     for geom in coastline_feature.geometries():
