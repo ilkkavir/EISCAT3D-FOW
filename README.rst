@@ -1,5 +1,3 @@
-|DOI|
-
 Overview
 ========
 
@@ -20,5 +18,6 @@ Example
 ===========
 
 Run the script with the command::
+
   python E3DonMapShaded.py
    
