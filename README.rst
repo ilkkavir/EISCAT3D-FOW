@@ -20,5 +20,5 @@ Example
 ===========
 
 Run the script with the command::
-   python E3DonMapShaded.py
+  python E3DonMapShaded.py
    
